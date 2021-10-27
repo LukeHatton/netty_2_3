@@ -36,7 +36,7 @@ public class EchoServerHandler extends ChannelInboundHandlerAdapter {
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         cause.printStackTrace();
-        //出现异常，直接关闭连接
+        //出现异常,直接关闭连接
         ctx.close();                //可以有别的处理方式,不过这里为了实现方便,直接关闭连接
     }
 }
