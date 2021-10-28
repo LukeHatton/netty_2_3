@@ -1,5 +1,28 @@
 [TOC]
 
+##解决环境问题
+
+在macOS环境下可以很轻易地进行socket测试,只要使用nc命令就好了
+
+```shell
+nc your_host_inet_addr your_port
+# e.g.
+nc 127.0.0.1 6996
+```
+
+但在windows环境下怎样测试呢?看网上地解决方案,大多是安装一个来路不明的类nc工具.exe,看起来就很可疑的样子.
+
+想到一个办法:
+
+- 用docker创建一个ubuntu镜像
+```shell
+docker pull ubuntu
+# 如果apt在ubuntu中无法使用,先运行下面的命令
+apt-get update
+apt-get -y install curl
+```
+- ubuntu镜像使用host网络模式即可
+
 ## netty API
 
 ### ByteBuf
@@ -77,4 +100,6 @@ serverBootstrap.childOption(ChannelOption.ALLOCATOR,UnpooledByteBufAllocator.DEF
 
 ## netty实践
 
-用netty实现一个通讯系统
+- 用netty实现一个通讯系统√
+
+- 实现客户端到服务端通信的编码解码

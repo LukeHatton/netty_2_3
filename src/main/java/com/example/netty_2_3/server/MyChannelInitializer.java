@@ -1,7 +1,8 @@
 package com.example.netty_2_3.server;
 
-import io.netty.channel.Channel;
+import com.example.netty_2_3.protocol.MyDecoder;
 import io.netty.channel.ChannelInitializer;
+import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
 import lombok.extern.slf4j.Slf4j;
 
@@ -25,7 +26,10 @@ public class MyChannelInitializer extends ChannelInitializer<SocketChannel> {
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
         log.info("=====> 尝试添加channel处理器到pipeline：【{}】...", MyChannelHandler.class.getName());
-        ch.pipeline().addLast(new MyChannelHandler());
+        ChannelPipeline pipeline = ch.pipeline();
+        pipeline.addLast(new MyChannelHandler());
         log.info("=====> 自定义channel处理器：【{}】 成功添加到channel pipeline中！", MyChannelHandler.class.getName());
+        pipeline.addLast(new MyDecoder());
+        log.info("=====> 自定义channel处理器：【{}】 成功添加到channel pipeline中！", MyDecoder.class.getName());
     }
 }

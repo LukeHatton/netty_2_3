@@ -1,5 +1,6 @@
 package com.example.netty_2_3.client;
 
+import com.example.netty_2_3.protocol.MyEncoder;
 import io.netty.bootstrap.Bootstrap;
 import io.netty.channel.ChannelFuture;
 import io.netty.channel.EventLoopGroup;
@@ -28,6 +29,7 @@ public class MyRPCClient {
             ChannelFuture future = bootstrap
                     .group(worker)
                     .channel(NioSocketChannel.class)            //使用的协议：NIO-TCP
+                    .handler(new MyEncoder())                   //使用自定义编码器
                     .handler(new MyClientChannelHandler())      //自定义客户端数据处理器
                     .connect(host, port).sync();                //连接远程主机和端口
 
