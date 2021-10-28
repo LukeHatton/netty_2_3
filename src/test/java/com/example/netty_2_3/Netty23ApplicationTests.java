@@ -22,6 +22,8 @@ class Netty23ApplicationTests {
      */
     @Test
     public void testNettyServerStart() {
+        //1.ByteBuf使用堆缓冲区，首先需要设置系统变量
+        System.setProperty("io.netty.noUnsafe", "true");
         MyRPCServer server = new MyRPCServer();
         server.start(port);
     }

@@ -7,7 +7,6 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.charset.StandardCharsets;
 import java.util.Scanner;
 
 /**
@@ -27,13 +26,14 @@ public class MyClientChannelHandler extends SimpleChannelInboundHandler<ByteBuf>
         System.out.println("=====> server response: "+msg.toString(CharsetUtil.UTF_8));
     }
 
-    /* 向服务端发送数据 */
+    /* channel启动行为：向服务端发送数据 */
     @Override
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         System.out.println("请键入要发送的数据：");
         ctx.writeAndFlush(Unpooled.copiedBuffer(new Scanner(System.in).nextLine(),CharsetUtil.UTF_8));
     }
 
+    /* channel读完成行为：循环向服务端发送数据 */
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
         channelActive(ctx);

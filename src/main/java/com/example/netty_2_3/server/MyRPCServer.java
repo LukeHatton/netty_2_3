@@ -1,15 +1,12 @@
 package com.example.netty_2_3.server;
 
 import io.netty.bootstrap.ServerBootstrap;
-import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
+import io.netty.buffer.UnpooledByteBufAllocator;
 import io.netty.channel.ChannelFuture;
-import io.netty.channel.ChannelHandlerContext;
-import io.netty.channel.ChannelInboundHandlerAdapter;
+import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.util.CharsetUtil;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -43,13 +40,15 @@ public class MyRPCServer {
         /* ================创建handler并启动================= */
         //2.创建服务对象
         ServerBootstrap bootstrap = new ServerBootstrap();
+        //ByteBuf使用堆缓冲区，还需要设置Bootstrap属性
+        bootstrap.childOption(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT);
         //3.服务对象绑定端口
         try {
             ChannelFuture future = bootstrap
                     .channel(NioServerSocketChannel.class)                   //因为数据可以有多种协议,需要指定通道接受的协议:NIO-TCP
                     .group(parentGroup, childGroup)                          //两个轮询组:parentGroup处理连接,childGroup处理请求
                     // .childHandler(new MyChannelHandler())                    //自定义ChannelHandler处理入栈请求
-                    .childHandler(new MyChannelInitializer())                     //使用支持自定义channel处理链的ChannelInitializer
+                    .childHandler(new MyChannelInitializer())                //使用支持自定义channel处理链的ChannelInitializer
                     .bind(port).sync();                                      //sync()启动服务,监听对应端口
 
             log.info("=====> server启动成功！");
