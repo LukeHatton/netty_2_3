@@ -10,11 +10,11 @@ nc your_host_inet_addr your_port
 nc 127.0.0.1 6996
 ```
 
-但在windows环境下怎样测试呢?看网上地解决方案,大多是安装一个来路不明的类nc工具.exe,看起来就很可疑的样子.
+但在windows环境下怎样测试呢?看网上的解决方案,大多是安装一个来路不明的类nc工具.exe,看起来就很可疑的样子.
 
 想到一个办法:
 
-- 用docker创建一个ubuntu镜像
+- ubuntu镜像使用host网络模式即可,当然bridge模式也可以
 ```shell
 docker pull ubuntu
 # 如果apt在ubuntu中无法使用,先运行下面的命令
@@ -103,3 +103,5 @@ serverBootstrap.childOption(ChannelOption.ALLOCATOR,UnpooledByteBufAllocator.DEF
 - 用netty实现一个通讯系统√
 
 - 实现客户端到服务端通信的编码解码
+
+  - 之前遇到一个问题,客户端也能连接服务端,但是就是无法发送数据.事后发现,是在MyRPCClient里创建ChannelInitializer的时候写错了,写成了服务端用的ChannelInitializer

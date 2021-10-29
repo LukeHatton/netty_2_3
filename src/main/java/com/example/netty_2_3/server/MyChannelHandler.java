@@ -7,6 +7,8 @@ import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 
+import java.nio.charset.StandardCharsets;
+
 /**
  * Package: com.example.netty_2_3.server
  * <p>
@@ -18,41 +20,23 @@ import lombok.extern.slf4j.Slf4j;
 @Slf4j
 public class MyChannelHandler extends SimpleChannelInboundHandler<MyProtocol> {
 
-    /* 读取客户端数据 */
-    /*使用自定义协议,不需要这个方法了
-    @Override
-    public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
-        //ByteBuf默认分配区：PooledUnsafeDirectByteBuf
-        //添加系统变量和Bootstrap属性后的缓冲分配区：InstrumentUnpooledUnsafeDirectByteBuf
-        //TODO 看视频是应该在Heap上分配的，但是并没有分配到Heap上。为什么？
-        ByteBuf byteBuf = (ByteBuf) msg;
-        String message = byteBuf.toString(CharsetUtil.UTF_8);
-        System.out.println("==>what does the client say: " + message);
-        //write()方法不会立刻将缓冲中的数据写回给channel连接
-        ctx.write(Unpooled.copiedBuffer("echo message: " + message + "\r\n", CharsetUtil.UTF_8));
-        //将msg交给channel pipeline中的下一个channelInboundHandler.channelRead处理
-        *//* 这种写法如果没有handler来处理这条数据，最后就会由
-        DefaultChannelPipeline.onUnhandledInboundMessage(Object msg)来处理 *//*
-        ctx.fireChannelRead(msg);
-        //需要手动释放ByteBuf
-        ReferenceCountUtil.release(msg);
-        //如果是继承的ChannelInboundHandlerAdapter,就需要手动释放ByteBuf
-        //如果是继承的SimpleChannelInboundHandler,就不需要手动释放
-        // ReferenceCountUtil.release(msg);
-    }*/
-
-    /* 读MyProtocol类型数据 */
+    /* 读取到数据时的操作：输出SUCCESS，并给客户端响应数据 */
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, MyProtocol msg) throws Exception {
-        System.out.println("==>received data from client: " + msg);
-        ctx.writeAndFlush(Unpooled.copiedBuffer("SUCCESS", CharsetUtil.UTF_8));
+        System.out.println("==>received data from client: " + new String(msg.getData(), StandardCharsets.UTF_8));
+
+        //自定义协议不能直接写回数据，需要进行协议封装
+        byte[] data = "==>SUCCESS".getBytes(StandardCharsets.UTF_8);
+        MyProtocol myProtocol = new MyProtocol(data.length, data);
+        ctx.writeAndFlush(myProtocol);
     }
 
-    /* 给客户端响应数据 */
+    /* 数据读取完成后的操作：给客户端响应数据 */
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        //writeAndFlush()方法会立刻将缓冲中的数据写回给channel连接
-        ctx.writeAndFlush(Unpooled.copiedBuffer("SUCCESS\r\n", CharsetUtil.UTF_8));
+        byte[] data = "==>SUCCESS from read complete".getBytes(StandardCharsets.UTF_8);
+        MyProtocol myProtocol = new MyProtocol(data.length, data);
+        ctx.writeAndFlush(myProtocol);
     }
 
     /* 异常处理 */

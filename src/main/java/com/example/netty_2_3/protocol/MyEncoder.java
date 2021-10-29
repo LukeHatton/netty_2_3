@@ -31,6 +31,6 @@ public class MyEncoder extends MessageToByteEncoder<MyProtocol> {
         byteBuf.writeInt(myProtocol.getLength());          //写入:数据长度(字节)
         byteBuf.writeBytes(myProtocol.getData());            //写入:字节数据
         //可能并不需要下面这行代码,但是暂时先留着
-        channelHandlerContext.writeAndFlush(byteBuf);
+        // channelHandlerContext.writeAndFlush(byteBuf);
     }
 }

@@ -1,6 +1,7 @@
 package com.example.netty_2_3.server;
 
 import com.example.netty_2_3.protocol.MyDecoder;
+import com.example.netty_2_3.protocol.MyEncoder;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -25,11 +26,13 @@ public class MyChannelInitializer extends ChannelInitializer<SocketChannel> {
      */
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
-        log.info("=====> 尝试添加channel处理器到pipeline：【{}】...", MyChannelHandler.class.getName());
+        log.info("=====> 尝试添加channel处理器到pipeline：【{}】...", MyChannelInitializer.class.getName());
         ChannelPipeline pipeline = ch.pipeline();
-        pipeline.addLast(new MyChannelHandler());
-        log.info("=====> 自定义channel处理器：【{}】 成功添加到channel pipeline中！", MyChannelHandler.class.getName());
         pipeline.addLast(new MyDecoder());
         log.info("=====> 自定义channel处理器：【{}】 成功添加到channel pipeline中！", MyDecoder.class.getName());
+        pipeline.addLast(new MyEncoder());
+        log.info("=====> 自定义channel处理器：【{}】 成功添加到channel pipeline中！", MyEncoder.class.getName());
+        pipeline.addLast(new MyChannelHandler());
+        log.info("=====> 自定义channel处理器：【{}】 成功添加到channel pipeline中！", MyChannelHandler.class.getName());
     }
 }
