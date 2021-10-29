@@ -24,11 +24,18 @@ public class MyChannelHandler extends SimpleChannelInboundHandler<MyProtocol> {
     public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
         //ByteBuf默认分配区：PooledUnsafeDirectByteBuf
         //添加系统变量和Bootstrap属性后的缓冲分配区：InstrumentUnpooledUnsafeDirectByteBuf
+        //TODO 看视频是应该在Heap上分配的，但是并没有分配到Heap上。为什么？
         ByteBuf byteBuf = (ByteBuf) msg;
         String message = byteBuf.toString(CharsetUtil.UTF_8);
         System.out.println("==>what does the client say: " + message);
         //write()方法不会立刻将缓冲中的数据写回给channel连接
         ctx.write(Unpooled.copiedBuffer("echo message: " + message + "\r\n", CharsetUtil.UTF_8));
+        //将msg交给channel pipeline中的下一个channelInboundHandler.channelRead处理
+        *//* 这种写法如果没有handler来处理这条数据，最后就会由
+        DefaultChannelPipeline.onUnhandledInboundMessage(Object msg)来处理 *//*
+        ctx.fireChannelRead(msg);
+        //需要手动释放ByteBuf
+        ReferenceCountUtil.release(msg);
         //如果是继承的ChannelInboundHandlerAdapter,就需要手动释放ByteBuf
         //如果是继承的SimpleChannelInboundHandler,就不需要手动释放
         // ReferenceCountUtil.release(msg);
