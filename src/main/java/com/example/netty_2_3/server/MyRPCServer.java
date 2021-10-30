@@ -7,6 +7,7 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
+import lombok.Cleanup;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 
@@ -33,9 +34,9 @@ public class MyRPCServer {
         log.info("=====> server尝试启动中...");
         /* ================1.创建事件轮询器================= */
         //创建线程池Boss,进行事件轮询,只用来获取客户端连接
-        EventLoopGroup parentGroup = new NioEventLoopGroup(1);      //parentGroup线程数：1
+        @Cleanup("shutdownGracefully") EventLoopGroup parentGroup = new NioEventLoopGroup(1);      //parentGroup线程数：1
         //创建现程池worker,进行事件轮询,用来处理请求
-        EventLoopGroup childGroup = new NioEventLoopGroup(2);       //childGroup线程数：2
+        @Cleanup("shutdownGracefully") EventLoopGroup childGroup = new NioEventLoopGroup(2);       //childGroup线程数：2
 
         /* ================创建handler并启动================= */
         //2.创建服务对象
@@ -43,27 +44,18 @@ public class MyRPCServer {
         //ByteBuf使用堆缓冲区，还需要设置Bootstrap属性
         bootstrap.childOption(ChannelOption.ALLOCATOR, UnpooledByteBufAllocator.DEFAULT);
         //3.服务对象绑定端口
-        try {
-            ChannelFuture future = bootstrap
-                    .channel(NioServerSocketChannel.class)                   //因为数据可以有多种协议,需要指定通道接受的协议:NIO-TCP
-                    .group(parentGroup, childGroup)                          //两个轮询组:parentGroup处理连接,childGroup处理请求
-                    // .childHandler(new MyChannelHandler())                    //自定义ChannelHandler处理入栈请求
-                    .childHandler(new MyChannelInitializer())                //使用支持自定义channel处理链的ChannelInitializer
-                    .bind(port).sync();                                      //sync()启动服务,监听对应端口
+        ChannelFuture future = bootstrap
+                .channel(NioServerSocketChannel.class)                   //因为数据可以有多种协议,需要指定通道接受的协议:NIO-TCP
+                .group(parentGroup, childGroup)                          //两个轮询组:parentGroup处理连接,childGroup处理请求
+                .childHandler(new MyChannelInitializer())                //使用支持自定义channel处理链的ChannelInitializer
+                .bind(port).sync();                                      //sync()启动服务,监听对应端口
 
-            log.info("=====> server启动成功！");
+        log.info("=====> server启动成功！");
             /*
             通过channel()方法得到channel对象;
             调用closeFuture()方法,线程在此阻塞,等待客户端连接,当channel关闭时返回ChannelFuture对象;
             调用sync(),等待,直到future对象结束
              */
-            future.channel().closeFuture().sync();
-        } catch (InterruptedException e) {
-            e.printStackTrace();
-        } finally {
-            //关闭线程池
-            parentGroup.shutdownGracefully();
-            childGroup.shutdownGracefully();
-        }
+        future.channel().closeFuture().sync();
     }
 }

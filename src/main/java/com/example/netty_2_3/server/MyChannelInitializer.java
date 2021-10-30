@@ -1,7 +1,6 @@
 package com.example.netty_2_3.server;
 
-import com.example.netty_2_3.protocol.MyDecoder;
-import com.example.netty_2_3.protocol.MyEncoder;
+import com.example.netty_2_3.protocol.HessianDecoder;
 import io.netty.channel.ChannelInitializer;
 import io.netty.channel.ChannelPipeline;
 import io.netty.channel.socket.SocketChannel;
@@ -26,13 +25,13 @@ public class MyChannelInitializer extends ChannelInitializer<SocketChannel> {
      */
     @Override
     protected void initChannel(SocketChannel ch) throws Exception {
-        log.info("=====> 尝试添加channel处理器到pipeline：【{}】...", MyChannelInitializer.class.getName());
+        log.info("=====> Pipeline Initializer is working ==> 【{}】", MyChannelInitializer.class.getName());
         ChannelPipeline pipeline = ch.pipeline();
-        pipeline.addLast(new MyDecoder());
-        log.info("=====> 自定义channel处理器：【{}】 成功添加到channel pipeline中！", MyDecoder.class.getName());
-        pipeline.addLast(new MyEncoder());
-        log.info("=====> 自定义channel处理器：【{}】 成功添加到channel pipeline中！", MyEncoder.class.getName());
+        //不需要编码器,因为客户端无法解析传输的数据(返回的数据类型不是Student,客户端无法反序列化)
+        // pipeline.addLast(new HessianEncoder());
+        pipeline.addLast(new HessianDecoder());
+        log.info("=====> adding channel handler:【{}】 SUCCESS!", HessianDecoder.class.getName());
         pipeline.addLast(new MyChannelHandler());
-        log.info("=====> 自定义channel处理器：【{}】 成功添加到channel pipeline中！", MyChannelHandler.class.getName());
+        log.info("=====> adding channel handler:【{}】 SUCCESS!", MyChannelHandler.class.getName());
     }
 }

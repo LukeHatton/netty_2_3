@@ -15,12 +15,14 @@ nc 127.0.0.1 6996
 想到一个办法:
 
 - ubuntu镜像使用host网络模式即可,当然bridge模式也可以
+
 ```shell
 docker pull ubuntu
 # 如果apt在ubuntu中无法使用,先运行下面的命令
 apt-get update
 apt-get -y install curl
 ```
+
 - ubuntu镜像使用host网络模式即可
 
 ## netty API
@@ -75,7 +77,7 @@ netty根据ByteBuf的所在位置不同,分为了三个缓冲区,即ByteBuf的�
 
 netty默认使用DirectByteBuf缓冲区,如果想切换到HeapByteBuf缓冲区,需要进行如下设置
 
-```java
+```
 //首先设置系统变量
 System.setProperty("io.netty.noUnsafe","true");
 //然后,还要设置Bootstrap的属性
@@ -98,10 +100,30 @@ serverBootstrap.childOption(ChannelOption.ALLOCATOR,UnpooledByteBufAllocator.DEF
     >
     >   ​	不使用缓冲池,每次创建新的ByteBuf对象
 
+
+
+## 自定义编码解码器
+
+要使用自定义的编码和解码器,主要包含如下几个步骤
+
+> - 自定义协议数据格式
+    >   - MyProtocol,前4字节用来存放int类型数据,用来描述发送的有效数据长度;后面才跟着是业务数据
+> - 自定义编码器(Encoder)
+    >   - 并注册到客户端ChannelInitializer中
+> - 自定义解码器(Decoder)
+    >   - 并注册到服务端ChannelInitializer中
+
+## Hessian序列化
+
+JDK自带的序列化使用很简便,但是性能比较差,使用Hessian替代.
+
+使用Hessian进行序列化很简单,只需引入[模板代码](https://gist.github.com/LukeHatton/7c4cfa65c0aef27bc2921957acbc52c5)即可
+
+
 ## netty实践
 
 - 用netty实现一个通讯系统√
 
 - 实现客户端到服务端通信的编码解码
 
-  - 之前遇到一个问题,客户端也能连接服务端,但是就是无法发送数据.事后发现,是在MyRPCClient里创建ChannelInitializer的时候写错了,写成了服务端用的ChannelInitializer
+    - 之前遇到一个问题,客户端也能连接服务端,但是就是无法发送数据.事后发现,是在MyRPCClient里创建ChannelInitializer的时候写错了,写成了服务端用的ChannelInitializer

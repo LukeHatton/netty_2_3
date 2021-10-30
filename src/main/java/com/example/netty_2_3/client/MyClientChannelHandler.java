@@ -1,15 +1,15 @@
 package com.example.netty_2_3.client;
 
-import com.example.netty_2_3.protocol.MyProtocol;
+import com.example.netty_2_3.entity.Student;
+import com.example.netty_2_3.util.HessianSerializer;
 import io.netty.buffer.ByteBuf;
-import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
 import io.netty.channel.SimpleChannelInboundHandler;
 import io.netty.util.CharsetUtil;
 import lombok.extern.slf4j.Slf4j;
 
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
+import java.time.LocalDateTime;
+import java.util.Random;
 import java.util.Scanner;
 
 /**
@@ -21,13 +21,14 @@ import java.util.Scanner;
  * <p>
  */
 @Slf4j
-public class MyClientChannelHandler extends SimpleChannelInboundHandler<MyProtocol> {
+public class MyClientChannelHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
-    // private static Scanner scanner = new Scanner(System.in);
+    private final HessianSerializer hessianSerializer = new HessianSerializer();
 
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, MyProtocol msg) throws Exception {
-        System.out.println("=====> server response: " + new String(msg.getData(), StandardCharsets.UTF_8));
+    protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
+        System.out.println("接收到服务端的消息：" + msg.toString(CharsetUtil.UTF_8));
+        this.channelActive(ctx);
     }
 
     /* channel启动行为：向服务端发送数据 */
@@ -35,28 +36,18 @@ public class MyClientChannelHandler extends SimpleChannelInboundHandler<MyProtoc
     public void channelActive(ChannelHandlerContext ctx) throws Exception {
         /* ================获取数据================= */
         Scanner scanner = new Scanner(System.in);
-        // if (scanner == null) scanner = scanner;      //这里的代码可能有问题,即使流关闭了可能也并不是null
+        System.out.println("按任意键以继续...");
+        scanner.nextLine();
+        Random random = new Random();
+        Student student = new Student(random.nextInt(20), random.nextInt(2), "personName:" + LocalDateTime.now());
 
-        System.out.println("请键入要发送的数据：");
-        String string = scanner.nextLine();
-        /* ================protocol================= */
-        byte[] data = string.getBytes(StandardCharsets.UTF_8);
-        MyProtocol myProtocol = new MyProtocol(data.length, data);
-
-        ctx.writeAndFlush(myProtocol);                              //因为已经是字节数据了,不需要再指定编码格式
-    }
-
-    /* channel读完成行为：循环向服务端发送数据 */
-    @Override
-    public void channelReadComplete(ChannelHandlerContext ctx) throws Exception {
-        channelActive(ctx);
+        ctx.writeAndFlush(student);                              //因为已经是字节数据了,不需要再指定编码格式
     }
 
     /* 异常处理 */
     @Override
     public void exceptionCaught(ChannelHandlerContext ctx, Throwable cause) throws Exception {
         ctx.close();                                    //出现异常，直接断开连接，释放资源
-        // if (scanner != null) scanner.close();           //关闭输入流
         log.error("Exception occurs!", cause);          //日志记录异常信息
     }
 }

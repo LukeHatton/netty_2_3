@@ -1,5 +1,6 @@
 package com.example.netty_2_3.server;
 
+import com.example.netty_2_3.entity.Student;
 import com.example.netty_2_3.protocol.MyProtocol;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelHandlerContext;
@@ -18,17 +19,13 @@ import java.nio.charset.StandardCharsets;
  * <p>
  */
 @Slf4j
-public class MyChannelHandler extends SimpleChannelInboundHandler<MyProtocol> {
+public class MyChannelHandler extends SimpleChannelInboundHandler<Student> {
 
-    /* 读取到数据时的操作：输出SUCCESS，并给客户端响应数据 */
     @Override
-    protected void channelRead0(ChannelHandlerContext ctx, MyProtocol msg) throws Exception {
-        System.out.println("==>received data from client: " + new String(msg.getData(), StandardCharsets.UTF_8));
-
-        //自定义协议不能直接写回数据，需要进行协议封装
-        byte[] data = "==>SUCCESS".getBytes(StandardCharsets.UTF_8);
-        MyProtocol myProtocol = new MyProtocol(data.length, data);
-        ctx.writeAndFlush(myProtocol);
+    protected void channelRead0(ChannelHandlerContext ctx, Student msg) throws Exception {
+        //获取到user对象
+        System.out.println(msg);
+        ctx.writeAndFlush(Unpooled.copiedBuffer("SUCCESS", CharsetUtil.UTF_8));
     }
 
     /* 数据读取完成后的操作：给客户端响应数据 */
