@@ -1,6 +1,6 @@
 [TOC]
 
-##解决环境问题
+## 解决环境问题
 
 在macOS环境下可以很轻易地进行socket测试,只要使用nc命令就好了
 
@@ -57,6 +57,49 @@ apt-get -y install curl
     >
     >   ​	ByteBuf分配的最大字节数
 
+### ChannelInboundHandlerAdapter和SimpleChannelInboundHandlr的区别
+
+ChannelInboundHandlerAdapter不会在channelRead方法后释放ByteBuf资源
+
+```java
+/**
+ * Calls {@link ChannelHandlerContext#fireChannelRead(Object)} to forward
+ * to the next {@link ChannelInboundHandler} in the {@link ChannelPipeline}.
+ *
+ * Sub-classes may override this method to change behavior.
+ */
+@Skip
+@Override
+public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        ctx.fireChannelRead(msg);
+        }
+```
+
+继承SimpleChannelInboundHandler需要实现channelRead0方法,超类使用模板方法模式,将channelRead0()方法作为了channelRead()方法的一个步骤,最后去释放资源
+
+```java
+@Override
+public void channelRead(ChannelHandlerContext ctx, Object msg) throws Exception {
+        boolean release = true;
+        try {
+        if (acceptInboundMessage(msg)) {
+@SuppressWarnings("unchecked")
+      I imsg = (I) msg;
+              channelRead0(ctx, imsg);
+              } else {
+              release = false;
+              ctx.fireChannelRead(msg);
+              }
+              } finally {
+              if (autoRelease && release) {
+              ReferenceCountUtil.release(msg);
+              }
+              }
+              }
+```
+
+因此,**如果服务端channelHandler在channelRead方法中还做了响应客户端的写操作,就不能释放资源(因为相同的ByteBuf会被用来写入数据**)
+
 ### netty的ByteBuf缓冲区
 
 netty根据ByteBuf的所在位置不同,分为了三个缓冲区,即ByteBuf的分配区域
@@ -100,7 +143,39 @@ serverBootstrap.childOption(ChannelOption.ALLOCATOR,UnpooledByteBufAllocator.DEF
     >
     >   ​	不使用缓冲池,每次创建新的ByteBuf对象
 
+## Netty基本构成
 
+#### ChannelInboundHandler
+
+> The ChannelInboundHandler receives messages which you can process and decide what to do with it.
+>
+> In other words, the business logic of your application typically lives in a ChannelInboundHandler.
+
+#### ChannelInitializer
+
+> ChannelInitializer. The role of the ChannelInitializer is to add ChannelHandler implementations to whats called the ChannelPipeline.
+
+#### ChannelPipeline
+
+> The ChannelPipeline is closely related to whats known as the EventLoop and EventLoopGroup because all three of them are related to events or event handling.
+
+#### EventLoopGroup
+
+> An EventLoops purpose in the application is to process IO operations for a Channel. A single EventLoop will typically handle events for multiple Channels.
+>
+> The EventLoopGroup itself may contain more then one EventLoop and can be used to obtain an EventLoop.
+
+#### Channel
+
+> A Channel is a representation of a socket connection or some component capable of performing IO operations, hence why it is managed by the EventLoop whose job it is to process IO.
+
+#### Netty中的所有IO操作都是异步的
+
+> you cant know if an operation was successful or not after it returns, but need to be able to check later for success or have some kind of ways to register a listener which is notified.
+>
+> To rectify this, Netty uses Futures and ChannelFutures. This future can be used to register a listener, which will be notified when an operation has either failed or completed successfully.
+>
+> P38 last 3 lines
 
 ## 自定义编码解码器
 
