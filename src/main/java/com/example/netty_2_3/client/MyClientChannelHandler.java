@@ -23,8 +23,6 @@ import java.util.Scanner;
 @Slf4j
 public class MyClientChannelHandler extends SimpleChannelInboundHandler<ByteBuf> {
 
-    private final HessianSerializer hessianSerializer = new HessianSerializer();
-
     @Override
     protected void channelRead0(ChannelHandlerContext ctx, ByteBuf msg) throws Exception {
         System.out.println("接收到服务端的消息：" + msg.toString(CharsetUtil.UTF_8));
